@@ -1,0 +1,30 @@
+---
+jobernetes:
+  phase:
+
+    - phase_name: pre config
+      jobs:
+        - name: create indices
+          job_path: first/job.yaml
+
+    - phase_name: source systems
+      jobs:
+        - name: download brahms
+          job_path: second/brahms.yaml
+        - name: import brahmns
+          job_path: second/brahms_import.yaml
+          depends_on:
+            - download brahms
+        - name: download crs
+          job_path: second/crs_download.yaml
+        - name: import crs
+          job_path: second/crs_import.yaml
+          depends_on:
+            - download crs
+
+    - phase_name: enrichment
+      jobs:
+        - name: enrichment jobs
+          type: directory
+          job_path: three
+
