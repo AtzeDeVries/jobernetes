@@ -1,30 +1,31 @@
 ---
 jobernetes:
-  phase:
+  - phase_name: pre_config
+    jobs:
+      - name: create_indices
+        job_path: test-dir/0-prepare/phase-one-sleep-5.yaml
 
-    - phase_name: pre config
-      jobs:
-        - name: create indices
-          job_path: first/job.yaml
+  - phase_name: source_systems
+    jobs:
+      - name: download_brahms
+        job_path: test-dir/1-gather/phase-two-sleep-15b.yaml
+      - name: import_brahms
+        job_path: test-dir/1-gather/phase-two-sleep-5a.yaml
+        depends_on:
+          - download_brahms
+      - name: download_crs
+        job_path:  test-dir/1-gather/phase-two-sleep-7b.yaml
+        depends_on:
+          - download_brahms
+      - name: import_crs
+        job_path: test-dir/1-gather/phase-two-sleep-10a.yaml
+        depends_on:
+          - download_crs
+          - import_brahms
 
-    - phase_name: source systems
-      jobs:
-        - name: download brahms
-          job_path: second/brahms.yaml
-        - name: import brahmns
-          job_path: second/brahms_import.yaml
-          depends_on:
-            - download brahms
-        - name: download crs
-          job_path: second/crs_download.yaml
-        - name: import crs
-          job_path: second/crs_import.yaml
-          depends_on:
-            - download crs
-
-    - phase_name: enrichment
-      jobs:
-        - name: enrichment jobs
-          type: directory
-          job_path: three
+  - phase_name: enrichment
+    jobs:
+      - name: enrichment_jobs
+        type: directory
+        job_path: test-dir/2-finalize
 

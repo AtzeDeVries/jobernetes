@@ -32,9 +32,14 @@ handlers:
 
 loggers:
     jobernetes.jobmodel:
-        level: DEBUG 
+        level: INFO
         handlers: [console]
         propagate: no
+    jobernetes.jobexecutor:
+        level: INFO
+        handlers: [console]
+        propagate: no
+
 
 root:
     level: INFO
