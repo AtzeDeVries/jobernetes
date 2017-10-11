@@ -1,2 +1,5 @@
 test-dir
 *.log
+*.pyc
+*.pyo
+__py_cache__
