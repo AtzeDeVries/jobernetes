@@ -40,7 +40,7 @@ jobernetes:
         job_path: test-dir/2-finalize
 ```
 The scheduler will first run all jobs in the first phase (start_sleep) and wait until they are finished. Then it will run (in parallel)
-run the jobs's in the second phase (source_systems) and wait until there are finished and then will run the jobs in the third phase (end_sleep).
+run the jobs's in the second phase (mid_sleep) and wait until there are finished and then will run the jobs in the third phase (end_sleep).
 You will also notice that the third phase has a job with `type` directory. This means that it will run all jobs which are in that directory.
 
 ### More advanced scheduling
@@ -92,7 +92,7 @@ the same phase.
 
 ## Use cases
 * A ETL (Extract Transform Load) job
-* A Build/test jog
+* A Build/test job
 * Download and import a database during a kubernetes deployment
 * A calculation with multipe steps running parallel on your kube cluster
 
