@@ -1,3 +1,0 @@
-2017-09-19 20:53:20,108 - jobernetes.jobmodel - ERROR - ERROR: sourcetype should be one of ['directory', 'git']
-2017-09-19 20:58:46,010 - jobernetes.jobmodel - ERROR - Path does not exist or is not readable: workdir
-2017-09-19 21:00:58,387 - jobernetes.jobmodel - ERROR - Path does not exist or is not readable: tes-dir/simple

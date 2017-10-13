@@ -1,0 +1,24 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: phase-two-sleep-15
+  labels:
+    app: phase-two-sleep-15
+spec:
+  template:
+    metadata:
+      name: phase-two-sleep-15
+      labels:
+        app: phase-two-sleep-15
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: phase-two-sleep-15
+        image: alpine
+        imagePullPolicy: Always
+        command: ["/bin/sh"]
+        args:
+        - "-c"
+        - >
+          sleep 15

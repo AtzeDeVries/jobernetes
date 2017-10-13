@@ -1,0 +1,24 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: phase-three-sleep-20
+  labels:
+    app: phase-three-sleep-20
+spec:
+  template:
+    metadata:
+      name: phase-three-sleep-20
+      labels:
+        app: phase-three-sleep-20
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: phase-three-sleep-20
+        image: alpine
+        imagePullPolicy: Always
+        command: ["/bin/sh"]
+        args:
+        - "-c"
+        - >
+          sleep 20
