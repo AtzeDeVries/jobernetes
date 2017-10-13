@@ -83,7 +83,8 @@ jobernetes:
         type: directory
         job_path: test-dir/2-finalize
 ```
-
+There is a new element `depends_on` which cointains a array of dependencies. These dependencies should be within
+the same phase.
 
 #### Additional features
 * Cleanup jobs after finished
@@ -131,7 +132,7 @@ jobernetes_config:
   incluster: True #Set this to true if you want to use this project from a kubernetes pod
 ```
 ### Known issues
-* Does not (yet) check if there exsists any circle depenencies
+* Does not (yet) check for circle depenencies
 * Does not validate if a `yaml`/`json` is really a kubernetes job
 
 
