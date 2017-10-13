@@ -96,7 +96,7 @@ jobernetes:
 * A calculation with multipe steps running parallel on your kube cluster
 
 
-### Running
+# Running
 First configure `jobermodel.yaml` to your prefered model. You also need access to a kubernetes cluster
 
 #### From CLI
