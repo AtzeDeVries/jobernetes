@@ -106,10 +106,18 @@ set to `False` Then just run `./jobernetes.py`
 #### From a inside a kubernetes cluster
 Make sure you have setting `incluster:True`
 ```shell
-kubectl run jobernetes --image=atzdevries/jobenetes:v0.0.1
+kubectl run jobernetes --image=atzdevries/jobernetes:v0.0.2
 ```
-#### From a conainter
-Still to do
+#### From a container
+You need access to a good `kubectl` config. Make sure you have in you `jobermodel` the setting `incluster`
+set to `False` 
+```shell
+docker run \
+    -v $(pwd)/jobermodel.yaml:/jobernetes/jobermodel.yaml \
+    -v /path/to/your/kube/config/.kube:/root/.kube \
+    atzedevries/jobernetes:v0.0.2
+```
+*note* that links in your kubeconfig should also be available in the container.
 
 
 ### Config options

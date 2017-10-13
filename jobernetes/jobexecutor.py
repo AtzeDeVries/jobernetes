@@ -15,19 +15,21 @@ class JobExecutor:
                  namespace='default',
                  ssl_insecure_warnings=True,
                  cleanup=True,
-                 refresh_time=5):
+                 refresh_time=5,
+                 incluster=True):
         """
         Initialized JobExecutor(jobmodel)
         """
         self.log = logging.getLogger(__name__)
         self.log.debug('Initialized JobExecutor')
         self.jobmodel = jobmodel
-        self.__initialize_client()
         self.namespace = namespace
         self.cleanup = cleanup
         self.refresh_time = refresh_time
+        self.incluster = incluster
         if not ssl_insecure_warnings:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        self.__initialize_client()
 
     
     def start(self):
@@ -170,12 +172,12 @@ class JobExecutor:
                                                        namespace=self.namespace)
 
 
-    def __initialize_client(self,incluster=True):
+    def __initialize_client(self):
         """
         Current requires correct .kube/config and kubectl
         """
         #c = configuration.verify_ssl = False
-        if incluster:
+        if self.incluster:
             config.load_incluster_config()
         else:
             config.load_kube_config()

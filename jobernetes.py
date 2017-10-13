@@ -24,7 +24,8 @@ job_executor = JobExecutor(job_model.get_jobmodel(),
                            namespace=cfg['kubernetes_namespace'],
                            ssl_insecure_warnings=cfg['ssl_insecure_warnings'],
                            cleanup=cfg['cleanup'],
-                           refresh_time=cfg['refresh_time'])
+                           refresh_time=cfg['refresh_time'],
+                           incluster=cfg['incluster'])
 
 job_executor.start()
 
