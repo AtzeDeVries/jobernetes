@@ -31,6 +31,10 @@ handlers:
         encoding: utf8
 
 loggers:
+    jobernetes.jobconfig:
+        level: False
+        handlers: [console]
+        propagate: no
     jobernetes.jobmodel:
         level: INFO
         handlers: [console]

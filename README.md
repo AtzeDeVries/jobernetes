@@ -1,9 +1,9 @@
-# Kubernetes Job Scheduler
+# Jobernetes
 
 ## Purpose
-This is a very simple scheduler for jobs in Kubernetes. You can not create job
+This is a very simple job runner for Kubernetes. You can not create job
 dependencies in Kubernetes. For example if you have 2 jobs a and b and be depends on the
-result of a, b should wait until a is finished. There is no native way to do this in Kubernets.
+result of a, b should wait until a is finished. There is (at least for now) no native way to do this in Kubernetes.
 This project should solve that problem.
 
 ## How it  works
@@ -14,18 +14,34 @@ D generates a report. So  B and C are depened on A en D is depenend on B and C. 
 A --          -- D
      \-- C --/
 ```
-For this you need a git repo with 3 directory's. The structure should look like:
+For this you need a `yaml` file. In this `yaml` file example, we use sleeps jobs. This hand for testing the job structure. 
+The file should look like:
+```yaml
+---
+jobernetes_config:
+  cleanup: true
+jobernetes:
+  - phase_name: start_sleep
+    jobs:
+      - name: sleep_one
+        job_path: test-dir/0-prepare/phase-one-sleep-5.yaml
+
+  - phase_name: mid_sleep
+    jobs:
+      - name: dream_a
+        job_path: test-dir/1-gather/phase-two-sleep-15b.yaml
+      - name: dream_b
+        job_path:  test-dir/1-gather/phase-two-sleep-7b.yaml
+
+  - phase_name: end_sleep
+    jobs:
+      - name: wakeup
+        type: directory
+        job_path: test-dir/2-finalize
 ```
-0-prepare
-  \ job-a.yaml
-1-gather
-  \ job-b.yaml
-  \ job-c.yaml
-2-report
-  \ job-d.yaml
-```
-The scheduler will first run all jobs in `0` directory and wait until they are finished. Then it will run (in parallel)
-run the jobs's in the `1` directory and wait until there are finished and then will run the jobs in the `2` directory.
+The scheduler will first run all jobs in the first phase (start_sleep) and wait until they are finished. Then it will run (in parallel)
+run the jobs's in the second phase (source_systems) and wait until there are finished and then will run the jobs in the third phase (end_sleep).
+You will also notice that the third phase has a job with `type` directory. This means that it will run all jobs which are in that directory.
 
 ### More advanced scheduling
 The have a more complex example, with 6 jobs. Here we want this tree.
@@ -36,23 +52,78 @@ A --               -- F
 ```
 We want this because job B long and job D depends on B, but is short. Job C is short and job E depends on C but is long.
 Your git repo directory structure should look like this
-```
-0-prepare
-  \ job-a.yaml
-1.0-gather-animals
-   \ job-b.yaml
-1.1-gather-plants
-   \ job-c.yaml
-2.0-gather-animals
-   \ job-d.yaml
-2.1-gather-plants
-   \ job-e.yaml
-3-report
-  \ job-f.yaml
+```yaml
+---
+jobernetes_config:
+  cleanup: true
+jobernetes:
+  - phase_name: start_sleep
+    jobs:
+      - name: sleep_one
+        job_path: test-dir/0-prepare/phase-one-sleep-5.yaml
+
+  - phase_name: mid_sleep
+    jobs:
+      - name: dream_a
+        job_path: test-dir/1-gather/phase-two-sleep-15b.yaml
+      - name: sleep_hickup_a
+        job_path: test-dir/1-gather/phase-two-sleep-5a.yaml
+        depends_on:
+          - dream_a
+      - name: dream_b
+        job_path:  test-dir/1-gather/phase-two-sleep-7b.yaml
+      - name: sleep_hickup_b
+        job_path: test-dir/1-gather/phase-two-sleep-10a.yaml
+        depends_on:
+          - dream_b
+
+  - phase_name: end_sleep
+    jobs:
+      - name: wakeup
+        type: directory
+        job_path: test-dir/2-finalize
 ```
 
 
 #### Additional features
 * Cleanup jobs after finished
-* Revert jobs if job has failed
+* Revert jobs if job has failed (to do)
+
+## Use cases
+* A ETL (Extract Transform Load) job
+* A Build/test jog
+* Download and import a database during a kubernetes deployment
+* A calculation with multipe steps running parallel on your kube cluster
+
+
+### Running
+First configure `jobermodel.yaml` to your prefered model. You also need access to a kubernetes cluster
+
+#### From CLI
+You need access to a good `kubectl` config. Make sure you have in you `jobermodel` the setting `incluster`
+set to `False` Then just run `./jobernetes.py`
+
+#### From a inside a kubernetes cluster
+Make sure you have setting `incluster:True`
+```shell
+kubectl run jobernetes --image=atzdevries/jobenetes:v0.0.1
+```
+#### From a conainter
+Still to do
+
+
+### Config options
+Currently the options are limited. You can config a job in the `jobernetes_config` section
+```yaml
+jobernetes_config:
+  cleanup: True #cleanup jobs after all is finished
+  ssl_insecure_warnings: True #If you are using kubernetes with a self signed certificate this might be handy to set to False
+  refresh_time: 5 #The amount of secons between each check update/check of your jobs
+  kubernetes_namespace: 'default' #The namespace in which the jobs will be running
+  incluster: True #Set this to true if you want to use this project from a kubernetes pod
+```
+### Known issues
+* Does not (yet) check if there exsists any circle depenencies
+* Does not validate if a `yaml`/`json` is really a kubernetes job
+
 

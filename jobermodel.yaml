@@ -1,4 +1,9 @@
 ---
+jobernetes_config:
+  cleanup: True
+  refresh_time: 10
+  ssl_insecure_warnings: False
+  incluster: True
 jobernetes:
   - phase_name: pre_config
     jobs:
@@ -15,13 +20,10 @@ jobernetes:
           - download_brahms
       - name: download_crs
         job_path:  test-dir/1-gather/phase-two-sleep-7b.yaml
-        depends_on:
-          - download_brahms
       - name: import_crs
         job_path: test-dir/1-gather/phase-two-sleep-10a.yaml
         depends_on:
           - download_crs
-          - import_brahms
 
   - phase_name: enrichment
     jobs:

@@ -14,6 +14,7 @@ class JobModel:
         self.log = logging.getLogger(__name__)
         self.log.debug('Initialized JobModel')
         self.path = path 
+        source_type = 'file' #shameless override (git/url should beimplemented)
         #if not type directory validate path
         if source_type == 'file':
             self.log.debug('Checking if path: "%s" exsists' % path)
@@ -59,7 +60,6 @@ class JobModel:
             if self.__is_job_type_directory(job):
                 count = 0
                 for f in self.__directory_filelist(job):
-                    #name = '%s-exploded-job-%s' % (job['name'],self.__generate_number_sequence(count))
                     appender = {'name': job['name'], 'job_path': f, 'type': 'exploded'}
                     if 'depends_on' in job:
                         appender['depends_on'] = job['depends_on']
@@ -70,11 +70,6 @@ class JobModel:
         phase['jobs'] = new_job_array
         return phase
 
-    def __generate_number_sequence(self,count,lenght=8):
-        string = ""
-        for i in range(lenght - len(str(count))):
-            string = string + "0"
-        return string + str(count)
 
     def __validate_jobmodel(self,phases,dry_run=False):
         """
@@ -82,14 +77,25 @@ class JobModel:
         * checks if job path exist
         * checks if job path is correct
         * checks if dependencies exists
-        * Should check if job names are unique (to be implemented)
-        * should check names on spaces (not allowed)
+        * checks if phase/job names are unique (to be implemented)
+        * checks names on spaces (not allowed)
+        * check if a phase has at least one job without dependency
+        * Should check for circle dependencies
         """
         ok=True
+        names_list = []
         for phase in phases:
             self.log.debug('Checking phase: "%s"' % phase['phase_name'])
+            non_dependend_jobs = False
+            names_list.append(phase['phase_name'])
+            if not self.__is_name_ok(phase['phase_name']):
+                ok = False
             for job in phase['jobs']:
                 #validate paths
+
+                names_list.append(job['name'])
+                if not self.__is_name_ok(job['name']):
+                    ok=False
                 self.log.debug('Check if path "%s" exists' % job['job_path'])
                 if not os.path.exists(job['job_path']):
                     ok=False
@@ -117,11 +123,27 @@ class JobModel:
                             ok=False
                             self.log.warn('Dependency "%s" of job "%s" does '
                                           'not exist' % (dep,job['name']))
+                if not 'depends_on' in job or len(job['depends_on']) == 0:
+                    non_dependend_jobs = True
+
+
+            if not non_dependend_jobs:
+                ok = False
+
+        if not len(names_list) == len(set(names_list)):
+            ok = False
 
         if not dry_run and not ok:
             self.log.error('Validation of jobermodel failed, exiting.')
             exit(1)
 
+
+    def __is_name_ok(self,name):
+        """
+        check if name contains spaces. Should be extened
+        to a more intellegent solution
+        """
+        return len(name.split()) == 1
 
 
     def __validate_dependency(self,current_phase,dependency):
@@ -152,6 +174,9 @@ class JobModel:
         return filelist
 
     def __get_kube_job_definition(self,job_path):
+        """
+        TODO: validate is yaml/json is a job
+        """
         if job_path.split('.')[-1] in ['yml','yaml']:
             with open(job_path) as f:
                 self.log.debug('Opening kubejob "%s"' % job_path)

@@ -14,7 +14,8 @@ class JobExecutor:
     def __init__(self,jobmodel,
                  namespace='default',
                  ssl_insecure_warnings=True,
-                 cleanup=True):
+                 cleanup=True,
+                 refresh_time=5):
         """
         Initialized JobExecutor(jobmodel)
         """
@@ -24,11 +25,12 @@ class JobExecutor:
         self.__initialize_client()
         self.namespace = namespace
         self.cleanup = cleanup
+        self.refresh_time = refresh_time
         if not ssl_insecure_warnings:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     
-    def start(self,refresh_time=5):
+    def start(self):
         the_end = False
         while not the_end:
             state = self.__get_phase()
@@ -53,12 +55,11 @@ class JobExecutor:
                     self.log.info('phase %s is running' % str(state))
                     self.log.info('Checking if depended jobs can be started')
                     self.__update_phase(state)
-            self.log.info("Waiting for %i seconds for status update" % refresh_time)
-            time.sleep(refresh_time)
+            self.log.info("Waiting for %i seconds for status update" % self.refresh_time)
+            time.sleep(self.refresh_time)
 
     def __report(self):
         totaltime = timedelta(0)
-        #totaltime = time.timedelta(0)
         start_times = []
         end_times = []
         for job in self.__get_current_jobs().items:
@@ -117,16 +118,16 @@ class JobExecutor:
             return True
         return False
 
-    
-    
+ 
+
     def __is_job_created(self,job,phase_num):
         for j in self.__get_current_jobs(label_selector="jobernetes_phase="+str(phase_num)).items:
             if job['kube_job_definition']['metadata']['name'] == j.metadata.name:
                 return True
         return False
- 
 
-    
+
+
     def __is_job_finished(self,job):
         for j in self.__get_current_jobs().items:
             if job == j.metadata.name:
@@ -169,12 +170,16 @@ class JobExecutor:
                                                        namespace=self.namespace)
 
 
-    def __initialize_client(self):
+    def __initialize_client(self,incluster=True):
         """
         Current requires correct .kube/config and kubectl
         """
         #c = configuration.verify_ssl = False
-        config.load_kube_config()
+        if incluster:
+            config.load_incluster_config()
+        else:
+            config.load_kube_config()
+
         self.kube_client = client.BatchV1Api()
 
 
