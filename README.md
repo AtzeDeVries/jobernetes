@@ -107,7 +107,7 @@ set to `False` Then just run `./jobernetes.py`
 #### From a inside a kubernetes cluster
 Make sure you have setting `incluster:True`
 ```shell
-kubectl run jobernetes --image=atzdevries/jobernetes:v0.0.2
+kubectl run jobernetes --image=atzedevries/jobernetes:v0.0.2
 ```
 Jobernetes uses the 'default' service account in the namespace you are using. It might be that your service acount
 does not have the access to create/delete/list jobs. In the resources directory a `role-model` and a `role-binding` for 
