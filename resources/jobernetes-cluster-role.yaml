@@ -1,0 +1,15 @@
+# A role for reading/listing secrets
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+ name: jobernetes
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - jobs
+  verbs:
+  - get
+  - list
+  - create
+  - delete

@@ -2,8 +2,8 @@
 
 ## Purpose
 This is a very simple job runner for Kubernetes. You can not create job
-dependencies in Kubernetes. For example if you have 2 jobs a and b and be depends on the
-result of a, b should wait until a is finished. There is (at least for now) no native way to do this in Kubernetes.
+dependencies in Kubernetes. For example if you have 2 jobs *a* and *b* and *b* depends on the
+result of *a*, *b* should wait until *a* is finished. There is (at least for now) no native way to do this in Kubernetes.
 This project should solve that problem.
 
 ## How it  works
@@ -109,6 +109,10 @@ Make sure you have setting `incluster:True`
 ```shell
 kubectl run jobernetes --image=atzdevries/jobernetes:v0.0.2
 ```
+Jobernetes uses the 'default' service account in the namespace you are using. It might be that your service acount
+does not have the access to create/delete/list jobs. In the resources directory a `role-model` and a `role-binding` for 
+jobernetes. You can use this to have the correct acl for the default service acount to run jobernetes.
+
 #### From a container
 You need access to a good `kubectl` config. Make sure you have in you `jobermodel` the setting `incluster`
 set to `False` 
