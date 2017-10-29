@@ -124,6 +124,10 @@ docker run \
 ```
 *note* that links in your kubeconfig should also be available in the container.
 
+### Recent changes
+* Less verbose logging, so setting `refresh_time` to a low number does not mess up your logging
+* Added abbility to set maximum parralel jobs.
+
 
 ### Config options
 Currently the options are limited. You can config a job in the `jobernetes_config` section
