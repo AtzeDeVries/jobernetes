@@ -59,20 +59,23 @@ class JobExecutor:
                     self.__update_phase(state)
             self.log.info("Waiting for %i seconds for status update" % self.refresh_time)
             time.sleep(self.refresh_time)
+        exit(0)
 
     def __report(self):
+        # Removed usertime feature since summation somehow is
+        # not correct and raises a error.
         totaltime = timedelta(0)
-        start_times = []
-        end_times = []
+        #start_times = []
+        #end_times = []
         for job in self.__get_current_jobs().items:
-            start_times.append(job.status.start_time)
-            end_times.append(job.status.completion_time)
+            #start_times.append(job.status.start_time)
+            #end_times.append(job.status.completion_time)
             time_taken = job.status.completion_time - job.status.start_time
             self.log.info('Job %s took %s' % (job.metadata.name,time_taken))
             totaltime += time_taken
-        user_time = sorted(end_times)[-1] - sorted(start_times)[0]
+        #user_time = sorted(end_times)[-1] - sorted(start_times)[0]
         self.log.info('Total computer runtime is %s' % totaltime)
-        self.log.info('Total user time is %s' % user_time)
+        #self.log.info('Total user time is %s' % user_time)
 
     def __get_phase(self):
         """
