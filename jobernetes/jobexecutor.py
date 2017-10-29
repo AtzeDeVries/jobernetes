@@ -58,10 +58,10 @@ class JobExecutor:
                         #self.__create_phase(state+1)
                         self.__update_phase(state+1)
                 else:
-                    self.log.info('phase %s is running' % str(state))
-                    self.log.info('Checking if depended jobs can be started')
+                    self.log.debug('phase %s is running' % str(state))
+                    self.log.debug('Checking if depended jobs can be started')
                     self.__update_phase(state)
-            self.log.info("Waiting for %i seconds for status update" % self.refresh_time)
+            self.log.debug("Waiting for %i seconds for status update" % self.refresh_time)
             time.sleep(self.refresh_time)
         exit(0)
 
@@ -124,7 +124,7 @@ class JobExecutor:
             if self.__is_job_created(job,phase_num):
                 continue
             if not self.__allowed_create_new_job():
-               self.log.info('Cannot create more jobs since'
+               self.log.debug('Cannot create more jobs since'
                              ' parallelization is %i' % self.parallelization)
                break
 
