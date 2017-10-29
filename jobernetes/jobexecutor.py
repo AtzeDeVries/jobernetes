@@ -16,7 +16,8 @@ class JobExecutor:
                  ssl_insecure_warnings=True,
                  cleanup=True,
                  refresh_time=5,
-                 incluster=True):
+                 incluster=True,
+                 parallelization=0):
         """
         Initialized JobExecutor(jobmodel)
         """
@@ -27,11 +28,12 @@ class JobExecutor:
         self.cleanup = cleanup
         self.refresh_time = refresh_time
         self.incluster = incluster
+        self.parallelization = parallelization
         if not ssl_insecure_warnings:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.__initialize_client()
 
-    
+
     def start(self):
         the_end = False
         while not the_end:
@@ -39,7 +41,8 @@ class JobExecutor:
             self.log.debug('Current phase is %i' % state)
             if state == -1:
                 self.log.info('Creating first phase')
-                self.__create_phase(0)
+                #self.__create_phase(0)
+                self.__update_phase(0)
             else:
                 if self.__is_phase_finished(state):
                     if state == len(self.jobmodel)-1:
@@ -52,7 +55,8 @@ class JobExecutor:
                     else:
                         #if not self.__is_phase_running(state+1):
                         self.log.info('Creating phase %s' % str(state+1))
-                        self.__create_phase(state+1)
+                        #self.__create_phase(state+1)
+                        self.__update_phase(state+1)
                 else:
                     self.log.info('phase %s is running' % str(state))
                     self.log.info('Checking if depended jobs can be started')
@@ -77,6 +81,7 @@ class JobExecutor:
         self.log.info('Total computer runtime is %s' % totaltime)
         #self.log.info('Total user time is %s' % user_time)
 
+
     def __get_phase(self):
         """
         Gets current phase. It will go trough phases.
@@ -93,6 +98,21 @@ class JobExecutor:
         return current_phase
 
 
+    def __create_phase(self,phase_num,timeout=60):
+        """
+        Creates a phase.
+        """
+        for job in self.jobmodel[phase_num]['jobs']:
+            if not self.__allowed_create_new_job():
+               self.log.info('Cannot create more jobs since'
+                             ' parallelization is %i' % self.parallelization)
+               break
+
+            if not 'depends_on' in job or len(job['depends_on']) == 0:
+                self.kube_client.create_namespaced_job(body=job['kube_job_definition'],
+                                                       namespace=self.namespace)
+                self.log.info('Created job %s' % job['kube_job_definition']['metadata']['name'])
+
 
     def __update_phase(self,phase_num):
         jobs_to_be_created = []
@@ -100,18 +120,54 @@ class JobExecutor:
         checks if some jobs are finished so depended jobs can be started
         """
         for job in self.jobmodel[phase_num]['jobs']:
+            # check if job is created then continue
+            if self.__is_job_created(job,phase_num):
+                continue
+            if not self.__allowed_create_new_job():
+               self.log.info('Cannot create more jobs since'
+                             ' parallelization is %i' % self.parallelization)
+               break
+
+            # check if non depended jobs are needed to be created
+            if not 'depends_on' in job or len(job['depends_on']) == 0:
+                self.kube_client.create_namespaced_job(body=job['kube_job_definition'],
+                                                       namespace=self.namespace)
+                self.log.info('Created job %s' % job['kube_job_definition']['metadata']['name'])
+                if not self.__allowed_create_new_job():
+                    self.log.info('Cannot create more jobs since'
+                                  ' parallelization is %i' % self.parallelization)
+                    break
+
             if 'depends_on' in job and len(job['depends_on']) > 0:
                 self.log.debug('Checking dependencies of job: "%s"' % job['kube_job_definition']['metadata']['name'])
                 if self.__are_dependencies_finished(job['depends_on']):
-                    if not self.__is_job_created(job,phase_num):
-                        jobs_to_be_created.append(job)
-                        self.log.info('dependencies of job: "%s" are done '
-                                      'Creating new job.' % job['kube_job_definition']['metadata']['name'])
-        for job in jobs_to_be_created:
-            self.kube_client.create_namespaced_job(body=job['kube_job_definition'],
-                                                   namespace=self.namespace)
-            self.log.info('Created job: "%s"' % job['kube_job_definition']['metadata']['name'])
+                    #jobs_to_be_created.append(job)
+                    self.kube_client.create_namespaced_job(body=job['kube_job_definition'],
+                                                           namespace=self.namespace)
+                    self.log.info('dependencies of job: "%s" are done '
+                                  'Creating new job.' % job['kube_job_definition']['metadata']['name'])
+                    if not self.__allowed_create_new_job():
+                        self.log.info('Cannot create more jobs since'
+                                  ' parallelization is %i' % self.parallelization)
+                        break
 
+
+        #for job in jobs_to_be_created:
+        #    self.kube_client.create_namespaced_job(body=job['kube_job_definition'],
+        #                                           namespace=self.namespace)
+        #    self.log.info('Created job: "%s"' % job['kube_job_definition']['metadata']['name'])
+
+
+    def __allowed_create_new_job(self):
+        if self.parallelization == 0:
+            return True
+        job_length = 0
+        for job in self.__get_current_jobs().items:
+            if bool(job.status.active):
+                job_length += 1
+        if job_length >= self.parallelization:
+            return False
+        return True
 
 
     def __is_phase_running(self,phase_num):
@@ -123,14 +179,12 @@ class JobExecutor:
             return True
         return False
 
- 
 
     def __is_job_created(self,job,phase_num):
         for j in self.__get_current_jobs(label_selector="jobernetes_phase="+str(phase_num)).items:
             if job['kube_job_definition']['metadata']['name'] == j.metadata.name:
                 return True
         return False
-
 
 
     def __is_job_finished(self,job):
@@ -164,15 +218,6 @@ class JobExecutor:
                     is_finished = False
         return is_finished
 
-
-    def __create_phase(self,phase_num,timeout=60):
-        """
-        Creates a phase.
-        """
-        for job in self.jobmodel[phase_num]['jobs']:
-            if not 'depends_on' in job or len(job['depends_on']) == 0:
-                self.kube_client.create_namespaced_job(body=job['kube_job_definition'],
-                                                       namespace=self.namespace)
 
 
     def __initialize_client(self):

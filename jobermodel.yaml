@@ -1,10 +1,10 @@
 ---
 jobernetes_config:
-  cleanup: False
-  refresh_time: 5
+  cleanup: True
+  refresh_time: 3
   ssl_insecure_warnings: False
   incluster: False
-  parallelization: 0
+  parallelization: 2
   jobname: test_name
 jobernetes:
   - phase_name: pre_config

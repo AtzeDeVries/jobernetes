@@ -48,5 +48,6 @@ class JobConfig:
         return {'cleanup': False,
                 'kubernetes_namespace' : 'default',
                 'ssl_insecure_warnings' : True,
-                'refresh_time': 5
+                'refresh_time': 5,
+                'parallelization': 0
                 }

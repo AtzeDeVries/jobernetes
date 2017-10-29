@@ -25,7 +25,8 @@ job_executor = JobExecutor(job_model.get_jobmodel(),
                            ssl_insecure_warnings=cfg['ssl_insecure_warnings'],
                            cleanup=cfg['cleanup'],
                            refresh_time=cfg['refresh_time'],
-                           incluster=cfg['incluster'])
+                           incluster=cfg['incluster'],
+                           parallelization=cfg['parallelization'])
 
 job_executor.start()
 

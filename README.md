@@ -134,6 +134,7 @@ jobernetes_config:
   refresh_time: 5 #The amount of secons between each check update/check of your jobs
   kubernetes_namespace: 'default' #The namespace in which the jobs will be running
   incluster: True #Set this to true if you want to use this project from a kubernetes pod
+  parallelization: 0 #Number of paralleljobs that should be run. 0 means unlimited.
 ```
 ### Known issues
 * Does not (yet) check for circle depenencies
