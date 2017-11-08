@@ -9,6 +9,7 @@ from kubernetes import client, config
 from kubernetes.client import configuration
 
 import logging
+import sys
 
 class JobExecutor:
     def __init__(self,jobmodel,
@@ -51,7 +52,7 @@ class JobExecutor:
                         if self.cleanup:
                             self.__cleanup_jobs()
                         the_end = True
-                        continue
+                        sys.exit(0) 
                     else:
                         #if not self.__is_phase_running(state+1):
                         self.log.info('Creating phase %s' % str(state+1))
@@ -63,6 +64,7 @@ class JobExecutor:
                     self.__update_phase(state)
             self.log.debug("Waiting for %i seconds for status update" % self.refresh_time)
             time.sleep(self.refresh_time)
+            #self.job_debug()
         exit(0)
 
     def __report(self):
@@ -191,10 +193,20 @@ class JobExecutor:
         for j in self.__get_current_jobs().items:
             if job == j.metadata.name:
                 self.log.debug('Found job %s, checking if finished' % job)
-                return not bool(j.status.active)
-        return False
+                return self.__job_finished_bool(j)
+                #return not bool(j.status.active)
+          #      try:
+          #          c = j.status.completion_time
+          #          return True
+          #      except:
+          #          # if unable to get completion time, job is not finished
+          #          return False
 
-
+    def __job_finished_bool(self,job):
+        if job.status.succeeded == None:
+            return False
+        else:
+            return True
 
     def __is_phase_finished(self,phase_num):
         for job in self.jobmodel[phase_num]['jobs']:
@@ -213,9 +225,11 @@ class JobExecutor:
                 is_finished = False
                 continue
             for job in jobs:
-                if bool(job.status.active):
-                    self.log.debug('Job "%s" is not yet finished' % job.metadata.name)
+                if not self.__job_finished_bool(job):
                     is_finished = False
+                #if bool(job.status.active):
+                #    self.log.debug('Job "%s" is not yet finished' % job.metadata.name)
+                #    is_finished = False
         return is_finished
 
 
@@ -259,11 +273,12 @@ class JobExecutor:
     def job_debug(self,label_selector=''):
         job_list = self.__get_current_jobs(label_selector)
         for job in job_list.items:
+            print(job)
             print("%-40s%-15s%-40s%-30s%-25s" % (job.metadata.name,
                                bool(job.status.active),
                                job.spec.template.spec.containers[0].image,
                                job.status.start_time,
-                               job.metadata.labels))
+                               job.status.succeeded))
 
 
 

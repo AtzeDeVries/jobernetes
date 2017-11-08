@@ -127,7 +127,7 @@ docker run \
 ### Recent changes
 * Less verbose logging, so setting `refresh_time` to a low number does not mess up your logging
 * Added abbility to set maximum parralel jobs.
-
+* Made a more secure way to check if job is finished
 
 ### Config options
 Currently the options are limited. You can config a job in the `jobernetes_config` section

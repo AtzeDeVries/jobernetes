@@ -3,7 +3,7 @@ jobernetes_config:
   cleanup: True
   refresh_time: 5
   ssl_insecure_warnings: False
-  incluster: True
+  incluster: False
   parallelization: 0
   jobname: test_name
 jobernetes:
