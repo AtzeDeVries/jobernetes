@@ -2,9 +2,10 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
  name: jobernetes
+ namespace: nba-v2-production
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: jobernetes
 roleRef:
   kind: ClusterRole
   name: jobernetes

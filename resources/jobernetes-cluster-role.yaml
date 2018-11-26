@@ -5,7 +5,7 @@ metadata:
  name: jobernetes
 rules:
 - apiGroups:
-  - '*'
+  - batch
   resources:
   - jobs
   verbs:
